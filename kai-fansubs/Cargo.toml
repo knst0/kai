@@ -1,6 +1,7 @@
 [package]
 name = "kai-fansubs"
 version = "0.1.0"
+description = "Rust client for fansubs.ru — anime subtitle database"
 edition.workspace = true
 license.workspace = true
 repository = "https://github.com/sekiju/kai/tree/main/kai-fansubs"
