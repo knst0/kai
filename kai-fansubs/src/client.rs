@@ -40,7 +40,7 @@ static CRATE_USER_AGENT: &str = concat!(
     env!("CARGO_PKG_NAME"),
     "/",
     env!("CARGO_PKG_VERSION"),
-    " (+https://github.com/sekiju/wc)",
+    " (+https://github.com/sekiju/kai)",
 );
 
 impl ClientBuilder {
@@ -83,16 +83,12 @@ impl ClientBuilder {
     }
 
     /// Sets the rate limit for requests per minute.
-    ///
-    /// Default is 90 requests per minute.
     pub fn rate_limit_per_minute(mut self, limit: u64) -> Self {
         self.rate_limit_per_minute = limit;
         self
     }
 
     /// Sets the rate limit for requests per second.
-    ///
-    /// Default is 5 requests per second.
     pub fn rate_limit_per_second(mut self, limit: u64) -> Self {
         self.rate_limit_per_second = limit;
         self
@@ -107,19 +103,16 @@ impl ClientBuilder {
             .build()
             .expect("failed to build reqwest client");
 
-        // Calculate durations for rate limiting
-        // For per-minute: duration = 60_000ms / rate
-        // For per-second: duration = 1_000ms / rate
         let rpm_duration = if self.rate_limit_per_minute > 0 {
             Duration::from_millis(60_000 / self.rate_limit_per_minute)
         } else {
-            Duration::from_millis(60_000) // Default to 1 request per minute if 0
+            Duration::from_millis(60_000)
         };
 
         let rps_duration = if self.rate_limit_per_second > 0 {
             Duration::from_millis(1_000 / self.rate_limit_per_second)
         } else {
-            Duration::from_millis(1_000) // Default to 1 request per second if 0
+            Duration::from_millis(1_000)
         };
 
         let http_service: BoxCloneService<Request, Response, BoxError> = ServiceBuilder::new()
@@ -131,7 +124,7 @@ impl ClientBuilder {
 
         Client {
             site_url: self.site_url,
-            http_client: http_client.clone(),
+            http_client,
             http_service,
         }
     }
