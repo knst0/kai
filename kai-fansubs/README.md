@@ -16,6 +16,10 @@ Add this to your `Cargo.toml`:
 kai-fansubs = "0.1.0"
 ```
 
+```shell
+cargo add kai-fansubs
+```
+
 ## Examples
 
 ```shell
@@ -27,7 +31,7 @@ cargo run --example catalog
 ## License
 
 This project is dual-licensed under:
-- MIT License ([LICENSE-MIT](../LICENSE-MIT) or http://opensource.org/licenses/MIT)
-- Apache License, Version 2.0 ([LICENSE-APACHE](../LICENSE-APACHE) or http://www.apache.org/licenses/LICENSE-2.0)
+- MIT License ([LICENSE-MIT](/LICENSE-MIT) or http://opensource.org/licenses/MIT)
+- Apache License, Version 2.0 ([LICENSE-APACHE](/LICENSE-APACHE) or http://www.apache.org/licenses/LICENSE-2.0)
 
 You may choose either license at your option.
