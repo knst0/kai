@@ -1,0 +1,21 @@
+[package]
+name = "kai-mangalib"
+version = "0.1.0"
+description = "TODO:"
+edition.workspace = true
+license.workspace = true
+repository = "https://github.com/sekiju/kai/tree/main/kai-mangalib"
+
+[dependencies]
+reqwest = {workspace = true, features = ["json", "rustls-tls"] }
+tower.workspace = true
+thiserror.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+
+[dev-dependencies]
+tokio.workspace = true
+
+[[example]]
+name = "manga"
+path = "examples/manga.rs"

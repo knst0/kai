@@ -6,6 +6,7 @@ This repository is a Cargo workspace. Each client is published as its own crate.
 
 ## Websites
 - [Fansubs / Kage Project](http://fansubs.ru): `kai-fansubs`
+- [MangaLib](https://mangalib.me): `kai-mangalib`
 
 ## Contributing
 
