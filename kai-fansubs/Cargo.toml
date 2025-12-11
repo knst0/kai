@@ -6,16 +6,19 @@ edition.workspace = true
 license.workspace = true
 repository = "https://github.com/sekiju/kai/tree/main/kai-fansubs"
 
+[features]
+serde = ["dep:serde"]
+
 [dependencies]
 encoding_rs = "0.8"
 reqwest.workspace = true
 scraper = "0.25"
+serde = { workspace = true, optional = true }
 thiserror.workspace = true
 tower.workspace = true
-serde = { version = "1", features = ["derive"], optional = true }
 
 [dev-dependencies]
-tokio = { version = "1", features = ["macros", "rt", "rt-multi-thread"] }
+tokio.workspace = true
 
 [[example]]
 name = "catalog"
@@ -24,6 +27,3 @@ path = "examples/catalog.rs"
 [[example]]
 name = "media"
 path = "examples/media.rs"
-
-[features]
-serde = ["dep:serde"]
