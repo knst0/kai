@@ -101,7 +101,7 @@ impl ClientBuilder {
         let http_client = self
             .reqwest_client_builder
             .build()
-            .expect("failed to build reqwest client");
+            .expect("kai-fansubs: failed to build reqwest client");
 
         let rpm_duration = if self.rate_limit_per_minute > 0 {
             Duration::from_millis(60_000 / self.rate_limit_per_minute)
