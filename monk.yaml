@@ -1,4 +1,4 @@
 pre-commit:
   commands:
-    - cargo +nightly fmt -- --check
+    - cargo fmt -- --check
     - cargo clippy -- -D warnings

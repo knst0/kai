@@ -16,9 +16,7 @@ async fn main() {
         .execute(&client)
         .await;
 
-    if let Ok(response) = response {
-        if let Some(manga) = response {
-            dbg!(&manga);
-        }
+    if let Ok(Some(manga)) = response {
+        dbg!(&manga);
     }
 }

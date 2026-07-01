@@ -103,17 +103,13 @@ impl ClientBuilder {
             .build()
             .expect("kai-fansubs: failed to build reqwest client");
 
-        let rpm_duration = if self.rate_limit_per_minute > 0 {
-            Duration::from_millis(60_000 / self.rate_limit_per_minute)
-        } else {
-            Duration::from_millis(60_000)
-        };
+        let rpm_duration = Duration::from_millis(
+            60_000_u64.checked_div(self.rate_limit_per_minute).unwrap_or(60_000),
+        );
 
-        let rps_duration = if self.rate_limit_per_second > 0 {
-            Duration::from_millis(1_000 / self.rate_limit_per_second)
-        } else {
-            Duration::from_millis(1_000)
-        };
+        let rps_duration = Duration::from_millis(
+            1_000_u64.checked_div(self.rate_limit_per_second).unwrap_or(1_000),
+        );
 
         let http_service: BoxCloneService<Request, Response, BoxError> = ServiceBuilder::new()
             .layer(BufferLayer::new(10))
