@@ -1,8 +1,8 @@
-use reqwest::{Method, StatusCode};
+use crate::SiteId;
 use crate::client::Client;
 use crate::error::Error;
 use crate::types::{Episode, EpisodesResponse};
-use crate::SiteId;
+use reqwest::{Method, StatusCode};
 
 #[derive(Debug, Clone)]
 pub struct EpisodesQuery {
@@ -12,10 +12,7 @@ pub struct EpisodesQuery {
 
 impl EpisodesQuery {
     pub fn new(anime_id: impl Into<String>) -> Self {
-        Self {
-            anime_id: anime_id.into(),
-            site_id: SiteId::Anime,
-        }
+        Self { anime_id: anime_id.into(), site_id: SiteId::Anime }
     }
 
     pub fn site_id(mut self, site_id: SiteId) -> Self {
@@ -41,10 +38,7 @@ impl EpisodesQuery {
             return Ok(Vec::new());
         }
 
-        let result = response
-            .json::<EpisodesResponse>()
-            .await
-            .map_err(Error::HttpError)?;
+        let result = response.json::<EpisodesResponse>().await.map_err(Error::HttpError)?;
 
         Ok(result.data)
     }

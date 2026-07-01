@@ -1,8 +1,8 @@
-use reqwest::{Method, StatusCode};
+use crate::SiteId;
 use crate::client::Client;
 use crate::error::Error;
 use crate::types::{Manga, MangaResponse};
-use crate::SiteId;
+use reqwest::{Method, StatusCode};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[non_exhaustive]
@@ -81,11 +81,7 @@ pub struct MangaQuery {
 
 impl MangaQuery {
     pub fn new(slug_url: impl Into<String>) -> Self {
-        Self {
-            slug_url: slug_url.into(),
-            fields: Vec::new(),
-            site_id: SiteId::Manga,
-        }
+        Self { slug_url: slug_url.into(), fields: Vec::new(), site_id: SiteId::Manga }
     }
 
     pub fn site_id(mut self, site_id: SiteId) -> Self {
@@ -126,10 +122,7 @@ impl MangaQuery {
             return Ok(None);
         }
 
-        let result = response
-            .json::<MangaResponse>()
-            .await
-            .map_err(Error::HttpError)?;
+        let result = response.json::<MangaResponse>().await.map_err(Error::HttpError)?;
 
         Ok(Some(result.data))
     }

@@ -53,7 +53,9 @@ pub fn parse_subtitles(html: &str) -> Result<Vec<SubtitleEntry>, Error> {
                 continue;
             }
 
-            if next_element.value().name() == "table" && next_element.value().classes().any(|c| c == "row1") {
+            if next_element.value().name() == "table"
+                && next_element.value().classes().any(|c| c == "row1")
+            {
                 if let Some(author) = parse_author_from_table(&next_element)? {
                     authors.push(author);
                 }
@@ -67,14 +69,7 @@ pub fn parse_subtitles(html: &str) -> Result<Vec<SubtitleEntry>, Error> {
             .parse::<u32>()
             .map_err(|e| Error::ParseError(format!("Invalid subtitle ID: {}", e)))?;
 
-        subtitles.push(SubtitleEntry {
-            id: subtitle_id,
-            title,
-            format,
-            date,
-            has_note,
-            authors,
-        });
+        subtitles.push(SubtitleEntry { id: subtitle_id, title, format, date, has_note, authors });
     }
 
     Ok(subtitles)
@@ -101,13 +96,7 @@ pub fn parse_author_from_table(table: &ElementRef) -> Result<Option<Author>, Err
         return Ok(None);
     }
 
-    Ok(Some(Author {
-        id,
-        name,
-        role,
-        team,
-        team_url,
-    }))
+    Ok(Some(Author { id, name, role, team, team_url }))
 }
 
 pub fn extract_role(text: &str) -> Option<String> {
@@ -125,10 +114,7 @@ pub fn extract_role(text: &str) -> Option<String> {
         "Редактор/Таймкод",
     ];
 
-    ROLES
-        .iter()
-        .find(|&&role| text.contains(&format!("{}:", role)))
-        .map(|&role| role.to_string())
+    ROLES.iter().find(|&&role| text.contains(&format!("{}:", role))).map(|&role| role.to_string())
 }
 
 pub fn extract_author_info(html: &str) -> (Option<u32>, String) {
@@ -180,7 +166,10 @@ pub struct InformationBlock {
     pub links: Vec<Link>,
 }
 
-pub fn parse_information_block(document: &Html, site_url_prefix: &str) -> Result<InformationBlock, Error> {
+pub fn parse_information_block(
+    document: &Html,
+    site_url_prefix: &str,
+) -> Result<InformationBlock, Error> {
     let table = document
         .select(&INFO_TABLE_SELECTOR)
         .next()
@@ -210,7 +199,9 @@ pub fn parse_information_block(document: &Html, site_url_prefix: &str) -> Result
 
     for el in elements {
         let blockquote = el.next_sibling().and_then(|node| {
-            if node.value().is_element() && node.value().as_element().unwrap().name() == "blockquote" {
+            if node.value().is_element()
+                && node.value().as_element().unwrap().name() == "blockquote"
+            {
                 Some(ElementRef::wrap(node).unwrap())
             } else {
                 let mut current = node;
@@ -257,11 +248,5 @@ pub fn parse_information_block(document: &Html, site_url_prefix: &str) -> Result
         }
     }
 
-    Ok(InformationBlock {
-        main_title,
-        alternative_names,
-        general_info,
-        poster_url,
-        links,
-    })
+    Ok(InformationBlock { main_title, alternative_names, general_info, poster_url, links })
 }

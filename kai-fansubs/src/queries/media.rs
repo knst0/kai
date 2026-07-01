@@ -59,10 +59,8 @@ impl MediaQuery {
             .build()
             .map_err(|e| Error::RequestBuildError(e.to_string()))?;
 
-        let response = client
-            .send(request)
-            .await
-            .map_err(|e| Error::ServiceError(e.to_string()))?;
+        let response =
+            client.send(request).await.map_err(|e| Error::ServiceError(e.to_string()))?;
         let bytes = response.bytes().await?;
 
         let (html, _, _) = WINDOWS_1251.decode(&bytes);

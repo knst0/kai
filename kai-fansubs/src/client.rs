@@ -122,11 +122,7 @@ impl ClientBuilder {
             .service(http_client.clone())
             .boxed_clone();
 
-        Client {
-            site_url: self.site_url,
-            http_client,
-            http_service,
-        }
+        Client { site_url: self.site_url, http_client, http_service }
     }
 }
 

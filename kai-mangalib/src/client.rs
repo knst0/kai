@@ -40,10 +40,10 @@ pub struct ClientBuilder {
 }
 
 static CRATE_USER_AGENT: &str = concat!(
-env!("CARGO_PKG_NAME"),
-"/",
-env!("CARGO_PKG_VERSION"),
-" (+https://github.com/sekiju/kai)",
+    env!("CARGO_PKG_NAME"),
+    "/",
+    env!("CARGO_PKG_VERSION"),
+    " (+https://github.com/sekiju/kai)",
 );
 
 impl ClientBuilder {
@@ -135,12 +135,7 @@ impl ClientBuilder {
             .service(http_client.clone())
             .boxed_clone();
 
-        Client {
-            api_url: self.api_url,
-            api_token: self.api_token,
-            http_client,
-            http_service,
-        }
+        Client { api_url: self.api_url, api_token: self.api_token, http_client, http_service }
     }
 }
 
@@ -173,7 +168,12 @@ impl Client {
         ClientBuilder::new()
     }
 
-    pub(crate) fn init_request(&self, method: Method, path: &str, site_id: SiteId) -> RequestBuilder {
+    pub(crate) fn init_request(
+        &self,
+        method: Method,
+        path: &str,
+        site_id: SiteId,
+    ) -> RequestBuilder {
         let mut request = self
             .http_client
             .request(method, self.api_url.clone() + path)

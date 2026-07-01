@@ -10,9 +10,9 @@ repository = "https://github.com/sekiju/kai/tree/main/kai-fansubs"
 serde = ["dep:serde"]
 
 [dependencies]
-encoding_rs = "0.8"
+encoding_rs.workspace = true
 reqwest.workspace = true
-scraper = "0.25"
+scraper.workspace = true
 serde = { workspace = true, optional = true }
 thiserror.workspace = true
 tower.workspace = true
