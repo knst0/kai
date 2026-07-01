@@ -334,13 +334,9 @@ impl AlphabetCatalogQuery {
 
     /// Executes the alphabet catalog query and returns media for the specified symbol.
     pub async fn execute(&self, client: &Client) -> Result<Vec<CatalogMedia>, Error> {
-        let request = client
-            .init_request(Method::GET, &format!("/base.php?l={}", self.symbol.as_url_encoded()))
-            .build()
-            .map_err(|e| Error::RequestBuildError(e.to_string()))?;
-
-        let response =
-            client.send(request).await.map_err(|e| Error::ServiceError(e.to_string()))?;
+        let builder = client
+            .init_request(Method::GET, &format!("/base.php?l={}", self.symbol.as_url_encoded()));
+        let response = client.execute_built(builder).await?;
         let bytes = response.bytes().await?;
         let (html, _, _) = WINDOWS_1251.decode(&bytes);
 

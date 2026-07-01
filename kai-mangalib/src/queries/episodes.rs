@@ -30,7 +30,7 @@ impl EpisodesQuery {
             .init_request(Method::GET, "/episodes", self.site_id)
             .query(&[("anime_id", &self.anime_id)])
             .build()
-            .expect("failed to build request");
+            .map_err(|e| Error::RequestBuildError(e.to_string()))?;
 
         let response = client.send(request).await?;
 

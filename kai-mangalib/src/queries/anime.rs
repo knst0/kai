@@ -1,77 +1,45 @@
 use crate::SiteId;
 use crate::client::Client;
 use crate::error::Error;
+use crate::queries::field_macro::media_field_enum;
 use crate::types::{Anime, AnimeResponse};
 use reqwest::{Method, StatusCode};
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-#[non_exhaustive]
-pub enum AnimeField {
-    Background,
-    EngName,
-    OtherNames,
-    Summary,
-    ReleaseDate,
-    TypeId,
-    Caution,
-    Views,
-    CloseView,
-    RateAvg,
-    Rate,
-    Genres,
-    Tags,
-    Teams,
-    User,
-    Franchise,
-    Authors,
-    Publisher,
-    UserRating,
-    Moderated,
-    Metadata,
-    MetadataCount,
-    MetadataCloseComments,
-    AnimeStatusId,
-    Time,
-    Episodes,
-    EpisodesCount,
-    EpisodesSchedule,
-    ShikiRate,
-}
-
-impl AnimeField {
-    pub const fn as_str(&self) -> &'static str {
-        match self {
-            Self::Background => "background",
-            Self::EngName => "eng_name",
-            Self::OtherNames => "otherNames",
-            Self::Summary => "summary",
-            Self::ReleaseDate => "releaseDate",
-            Self::TypeId => "type_id",
-            Self::Caution => "caution",
-            Self::Views => "views",
-            Self::CloseView => "close_view",
-            Self::RateAvg => "rate_avg",
-            Self::Rate => "rate",
-            Self::Genres => "genres",
-            Self::Tags => "tags",
-            Self::Teams => "teams",
-            Self::User => "user",
-            Self::Franchise => "franchise",
-            Self::Authors => "authors",
-            Self::Publisher => "publisher",
-            Self::UserRating => "userRating",
-            Self::Moderated => "moderated",
-            Self::Metadata => "metadata",
-            Self::MetadataCount => "metadata.count",
-            Self::MetadataCloseComments => "metadata.close_comments",
-            Self::AnimeStatusId => "anime_status_id",
-            Self::Time => "time",
-            Self::Episodes => "episodes",
-            Self::EpisodesCount => "episodes_count",
-            Self::EpisodesSchedule => "episodesSchedule",
-            Self::ShikiRate => "shiki_rate",
-        }
-    }
+media_field_enum! {
+    AnimeField,
+    common: [
+        Background => "background",
+        EngName => "eng_name",
+        OtherNames => "otherNames",
+        Summary => "summary",
+        ReleaseDate => "releaseDate",
+        TypeId => "type_id",
+        Caution => "caution",
+        Views => "views",
+        CloseView => "close_view",
+        RateAvg => "rate_avg",
+        Rate => "rate",
+        Genres => "genres",
+        Tags => "tags",
+        Teams => "teams",
+        User => "user",
+        Franchise => "franchise",
+        Authors => "authors",
+        Publisher => "publisher",
+        UserRating => "userRating",
+        Moderated => "moderated",
+        Metadata => "metadata",
+        MetadataCount => "metadata.count",
+        MetadataCloseComments => "metadata.close_comments",
+    ],
+    extra: [
+        AnimeStatusId => "anime_status_id",
+        Time => "time",
+        Episodes => "episodes",
+        EpisodesCount => "episodes_count",
+        EpisodesSchedule => "episodesSchedule",
+        ShikiRate => "shiki_rate",
+    ]
 }
 
 #[derive(Debug, Clone)]
@@ -116,7 +84,7 @@ impl AnimeQuery {
             .init_request(Method::GET, &format!("/anime/{}", self.slug_url), self.site_id)
             .query(&query)
             .build()
-            .expect("failed to build request");
+            .map_err(|e| Error::RequestBuildError(e.to_string()))?;
 
         let response = client.send(request).await?;
 

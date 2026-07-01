@@ -6,6 +6,9 @@ pub enum Error {
 
     #[error("Tower error: {}", .0)]
     TowerError(#[from] tower::BoxError),
+
+    #[error("Request build error: {0}")]
+    RequestBuildError(String),
 }
 
 // todo: In error.rs: Consider adding variants for API-specific errors (rate limited, unauthorized, etc.) rather than lumping everything into HttpError.

@@ -49,15 +49,11 @@ impl DownloadSubtitleQuery {
     pub async fn execute(&self, client: &Client) -> Result<Vec<u8>, Error> {
         let body = format!("srt={}&x=0&y=0", self.subtitle_id);
 
-        let request = client
+        let builder = client
             .init_request(Method::POST, "/base.php")
             .header("Content-Type", "application/x-www-form-urlencoded")
-            .body(body)
-            .build()
-            .map_err(|e| Error::RequestBuildError(e.to_string()))?;
-
-        let response =
-            client.send(request).await.map_err(|e| Error::ServiceError(e.to_string()))?;
+            .body(body);
+        let response = client.execute_built(builder).await?;
         let bytes = response.bytes().await?;
 
         Ok(bytes.to_vec())
@@ -99,7 +95,7 @@ impl DownloadSubtitleQuery {
     /// Downloads the subtitle file and saves it directly to the filesystem.
     pub async fn download_to_file(&self, client: &Client, path: &str) -> Result<(), Error> {
         let bytes = self.execute(client).await?;
-        std::fs::write(path, bytes)?;
+        tokio::fs::write(path, bytes).await?;
         Ok(())
     }
 }

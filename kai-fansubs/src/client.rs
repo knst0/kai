@@ -1,3 +1,4 @@
+use crate::error::Error;
 use reqwest::{Method, Request, RequestBuilder, Response};
 use std::time::Duration;
 use tower::buffer::BufferLayer;
@@ -158,6 +159,11 @@ impl Client {
         let mut svc = self.http_service.clone();
         svc.ready().await?;
         svc.call(request).await
+    }
+
+    pub(crate) async fn execute_built(&self, builder: RequestBuilder) -> Result<Response, Error> {
+        let request = builder.build().map_err(|e| Error::RequestBuildError(e.to_string()))?;
+        self.send(request).await.map_err(|e| Error::ServiceError(e.to_string()))
     }
 }
 

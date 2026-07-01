@@ -1,5 +1,6 @@
 mod anime;
 mod episodes;
+mod field_macro;
 mod manga;
 
 pub use anime::*;
