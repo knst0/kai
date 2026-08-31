@@ -41,7 +41,7 @@ static CRATE_USER_AGENT: &str = concat!(
     env!("CARGO_PKG_NAME"),
     "/",
     env!("CARGO_PKG_VERSION"),
-    " (+https://github.com/sekiju/kai)",
+    " (+https://github.com/knst0/kai)",
 );
 
 impl ClientBuilder {

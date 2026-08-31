@@ -4,14 +4,14 @@ version = "0.1.0"
 description = "Rust client for fansubs.ru — anime subtitle database"
 edition.workspace = true
 license.workspace = true
-repository = "https://github.com/sekiju/kai/tree/main/kai-fansubs"
+repository = "https://github.com/knst0/kai/tree/main/kai-fansubs"
 
 [features]
 serde = ["dep:serde"]
 
 [dependencies]
 encoding_rs.workspace = true
-reqwest = { version = "0.12", default-features = false }
+reqwest.workspace = true
 scraper.workspace = true
 serde = { workspace = true, optional = true }
 thiserror.workspace = true
