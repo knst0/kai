@@ -1,4 +1,4 @@
-# sekiju/kai
+# Kai
 
 A collection of Rust clients and utilities for "otaku" websites.
 
@@ -14,8 +14,4 @@ Issues and pull requests are welcome. Please keep code and documentation clear a
 
 ## License
 
-This workspace and all crates within are dual-licensed under:
-- MIT License ([LICENSE-MIT](../LICENSE-MIT) or http://opensource.org/licenses/MIT)
-- Apache License, Version 2.0 ([LICENSE-APACHE](../LICENSE-APACHE) or http://www.apache.org/licenses/LICENSE-2.0)
-
-You may choose either license at your option.
+This workspace and all crates are licensed under the terms of the [MIT License](./LICENSE).
