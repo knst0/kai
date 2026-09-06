@@ -182,14 +182,18 @@ impl Client {
         request
     }
 
-    /// Turns a non-success response into a typed [`Error`].
-    pub(crate) async fn check_response(response: Response) -> Result<Response, Error> {
+    pub(crate) async fn send(&self, request: Request) -> Result<Response, Error> {
+        let mut svc = self.http_service.clone();
+        svc.ready().await?;
+        let response = svc.call(request).await.map_err(Error::from)?;
+
         let status = response.status();
         if status.is_success() {
             return Ok(response);
         }
 
         match status {
+            StatusCode::NOT_FOUND => return Err(Error::NotFound),
             StatusCode::UNAUTHORIZED | StatusCode::FORBIDDEN => return Err(Error::Unauthorized),
             StatusCode::TOO_MANY_REQUESTS => return Err(Error::RateLimited),
             _ => {}
@@ -197,12 +201,6 @@ impl Client {
 
         let body = response.text().await.unwrap_or_default();
         Err(Error::ApiError { status: status.as_u16(), message: summarize_api_error(&body) })
-    }
-
-    pub(crate) async fn send(&self, request: Request) -> Result<Response, Error> {
-        let mut svc = self.http_service.clone();
-        svc.ready().await?;
-        svc.call(request).await.map_err(Error::from)
     }
 }
 

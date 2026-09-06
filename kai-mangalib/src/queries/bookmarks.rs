@@ -70,7 +70,7 @@ impl BookmarksQuery {
             .build()
             .map_err(|e| Error::RequestBuildError(e.to_string()))?;
 
-        let response = Client::check_response(client.send(request).await?).await?;
+        let response = client.send(request).await?;
         let result = response.json::<BookmarksResponse>().await.map_err(Error::HttpError)?;
 
         Ok(result.data)

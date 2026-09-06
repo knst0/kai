@@ -2,7 +2,7 @@ use crate::SiteId;
 use crate::client::Client;
 use crate::error::Error;
 use crate::types::{Episode, EpisodesResponse};
-use reqwest::{Method, StatusCode};
+use reqwest::Method;
 
 #[derive(Debug, Clone)]
 pub struct EpisodesQuery {
@@ -32,11 +32,11 @@ impl EpisodesQuery {
             .build()
             .map_err(|e| Error::RequestBuildError(e.to_string()))?;
 
-        let response = client.send(request).await?;
-
-        if response.status() == StatusCode::NOT_FOUND {
-            return Ok(Vec::new());
-        }
+        let response = match client.send(request).await {
+            Ok(response) => response,
+            Err(Error::NotFound) => return Ok(Vec::new()),
+            Err(error) => return Err(error),
+        };
 
         let result = response.json::<EpisodesResponse>().await.map_err(Error::HttpError)?;
 

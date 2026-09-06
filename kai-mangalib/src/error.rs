@@ -19,6 +19,14 @@ pub enum Error {
     #[error("authentication required")]
     Unauthorized,
 
+    /// The requested resource does not exist.
+    ///
+    /// Queries that model absence as `None` or an empty list handle this
+    /// themselves; it reaches callers only from endpoints where a missing
+    /// resource is genuinely an error.
+    #[error("resource not found")]
+    NotFound,
+
     /// Upstream asked us to slow down.
     #[error("rate limited by the API")]
     RateLimited,

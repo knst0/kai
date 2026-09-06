@@ -3,7 +3,7 @@ use crate::client::Client;
 use crate::error::Error;
 use crate::queries::field_macro::media_field_enum;
 use crate::types::{User, UserResponse};
-use reqwest::{Method, StatusCode};
+use reqwest::Method;
 
 media_field_enum! {
     UserField,
@@ -62,11 +62,11 @@ impl UserQuery {
             .build()
             .map_err(|e| Error::RequestBuildError(e.to_string()))?;
 
-        let response = client.send(request).await?;
-
-        if response.status() == StatusCode::NOT_FOUND {
-            return Ok(None);
-        }
+        let response = match client.send(request).await {
+            Ok(response) => response,
+            Err(Error::NotFound) => return Ok(None),
+            Err(error) => return Err(error),
+        };
 
         let result = response.json::<UserResponse>().await.map_err(Error::HttpError)?;
 
