@@ -43,3 +43,22 @@ impl EpisodesQuery {
         Ok(result.data)
     }
 }
+
+#[cfg(all(test, feature = "live-tests"))]
+mod tests {
+    use super::*;
+    use crate::queries::test_util::{ANIME_SLUG, client};
+
+    #[tokio::test]
+    async fn lists_episodes_of_an_anime() {
+        let episodes = EpisodesQuery::new(ANIME_SLUG)
+            .site_id(SiteId::Anime)
+            .execute(&client())
+            .await
+            .expect("request failed");
+
+        for episode in &episodes {
+            assert!(episode.id > 0);
+        }
+    }
+}

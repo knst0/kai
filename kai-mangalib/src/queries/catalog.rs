@@ -17,7 +17,11 @@ media_field_enum! {
 
 #[derive(Debug, Clone, Default)]
 pub struct MangaListQuery {
+    q: Option<String>,
     fields: Vec<MangaListField>,
+    moderated: Vec<i64>,
+    sort_by: Option<String>,
+    sort_type: Option<String>,
     site_ids: Vec<i64>,
     types: Vec<i64>,
     genres: Vec<i64>,
@@ -37,6 +41,26 @@ impl MangaListQuery {
 
     pub fn site_id(mut self, site_id: SiteId) -> Self {
         self.site_id = Some(site_id);
+        self
+    }
+
+    pub fn q(mut self, q: impl Into<String>) -> Self {
+        self.q = Some(q.into());
+        self
+    }
+
+    pub fn moderated(mut self, moderated: impl IntoIterator<Item = i64>) -> Self {
+        self.moderated.extend(moderated);
+        self
+    }
+
+    pub fn sort_by(mut self, sort_by: impl Into<String>) -> Self {
+        self.sort_by = Some(sort_by.into());
+        self
+    }
+
+    pub fn sort_type(mut self, sort_type: impl Into<String>) -> Self {
+        self.sort_type = Some(sort_type.into());
         self
     }
 
@@ -97,6 +121,12 @@ impl MangaListQuery {
 
     pub async fn execute(&self, client: &Client) -> Result<MangaListResponse, Error> {
         let mut query: Vec<(&str, String)> = Vec::new();
+        if let Some(q) = &self.q {
+            query.push(("q", q.clone()));
+        }
+        for moderated in &self.moderated {
+            query.push(("moderated[]", moderated.to_string()));
+        }
         for field_name in &self.fields {
             query.push(("fields[]", field_name.as_str().to_owned()));
         }
@@ -124,6 +154,12 @@ impl MangaListQuery {
         if let Some(licensed) = self.licensed {
             query.push(("licensed", licensed.to_string()));
         }
+        if let Some(sort_by) = &self.sort_by {
+            query.push(("sort_by", sort_by.clone()));
+        }
+        if let Some(sort_type) = &self.sort_type {
+            query.push(("sort_type", sort_type.clone()));
+        }
         if let Some(page) = self.page {
             query.push(("page", page.to_string()));
         }
@@ -138,5 +174,73 @@ impl MangaListQuery {
         let result = response.json::<MangaListResponse>().await.map_err(Error::HttpError)?;
 
         Ok(result)
+    }
+}
+
+#[cfg(all(test, feature = "live-tests"))]
+mod tests {
+    use super::*;
+    use crate::queries::test_util::{GENRE_ID, client};
+
+    #[tokio::test]
+    async fn lists_the_catalog() {
+        let page = MangaListQuery::new().execute(&client()).await.expect("request failed");
+
+        assert!(!page.data.is_empty(), "catalog page was empty");
+        assert_eq!(page.meta.current_page, 1);
+        for manga in &page.data {
+            assert!(!manga.slug_url.is_empty());
+        }
+    }
+
+    #[tokio::test]
+    async fn paginates() {
+        let first = MangaListQuery::new().page(1).execute(&client()).await.expect("request failed");
+        let second =
+            MangaListQuery::new().page(2).execute(&client()).await.expect("request failed");
+
+        assert_eq!(second.meta.current_page, 2);
+
+        let first_ids: Vec<i64> = first.data.iter().map(|m| m.id).collect();
+        let overlap = second.data.iter().filter(|m| first_ids.contains(&m.id)).count();
+        assert!(overlap < second.data.len(), "page 2 duplicated page 1 entirely");
+    }
+
+    #[tokio::test]
+    async fn search_matches_the_query() {
+        let page =
+            MangaListQuery::new().q("naruto").execute(&client()).await.expect("request failed");
+
+        assert!(!page.data.is_empty(), "search returned no results");
+        assert!(
+            page.data.iter().any(|m| {
+                m.name.to_lowercase().contains("naruto")
+                    || m.rus_name.to_lowercase().contains("naruto")
+                    || m.eng_name.as_deref().unwrap_or_default().to_lowercase().contains("naruto")
+            }),
+            "no result mentioned the search term"
+        );
+    }
+
+    #[tokio::test]
+    async fn requested_fields_are_populated() {
+        let page = MangaListQuery::new()
+            .with_fields([MangaListField::Rate, MangaListField::RateAvg])
+            .execute(&client())
+            .await
+            .expect("request failed");
+
+        assert!(page.data.iter().any(|m| m.rating.is_some()), "rate field was not returned");
+    }
+
+    #[tokio::test]
+    async fn genre_filter_is_applied() {
+        let page = MangaListQuery::new()
+            .genres([GENRE_ID])
+            .execute(&client())
+            .await
+            .expect("request failed");
+
+        assert!(!page.data.is_empty(), "genre-filtered page was empty");
     }
 }

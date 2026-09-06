@@ -6,6 +6,9 @@ edition.workspace = true
 license.workspace = true
 repository = "https://github.com/knst0/kai/tree/main/kai-mangalib"
 
+[features]
+live-tests = []
+
 [dependencies]
 reqwest = { workspace = true, features = ["json", "rustls", "query"] }
 serde.workspace = true
@@ -14,7 +17,7 @@ thiserror.workspace = true
 tower.workspace = true
 
 [dev-dependencies]
-tokio.workspace = true
+tokio = { workspace = true, features = ["rt-multi-thread", "rt", "macros"] }
 
 [[example]]
 name = "manga"

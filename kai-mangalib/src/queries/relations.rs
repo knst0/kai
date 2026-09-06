@@ -37,3 +37,19 @@ impl RelationsQuery {
         Ok(result.data)
     }
 }
+
+#[cfg(all(test, feature = "live-tests"))]
+mod tests {
+    use super::*;
+    use crate::queries::test_util::{MANGA_SLUG, client};
+
+    #[tokio::test]
+    async fn lists_related_titles() {
+        let relations =
+            RelationsQuery::new(MANGA_SLUG).execute(&client()).await.expect("request failed");
+
+        for item in &relations {
+            assert!(item.media.id > 0);
+        }
+    }
+}

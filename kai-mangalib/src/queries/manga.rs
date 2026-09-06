@@ -96,3 +96,52 @@ impl MangaQuery {
         Ok(Some(result.data))
     }
 }
+
+#[cfg(all(test, feature = "live-tests"))]
+mod tests {
+    use super::*;
+    use crate::queries::test_util::{MANGA_SLUG, MISSING_SLUG, client};
+
+    #[tokio::test]
+    async fn fetches_a_known_title() {
+        let manga = MangaQuery::new(MANGA_SLUG)
+            .execute(&client())
+            .await
+            .expect("request failed")
+            .expect("title should exist");
+
+        assert_eq!(manga.slug_url, MANGA_SLUG);
+        assert!(!manga.name.is_empty());
+        assert_eq!(manga.model, "manga");
+    }
+
+    #[tokio::test]
+    async fn requested_fields_are_populated() {
+        let manga = MangaQuery::new(MANGA_SLUG)
+            .with_fields([
+                MangaField::Summary,
+                MangaField::Genres,
+                MangaField::Authors,
+                MangaField::ChapCount,
+                MangaField::RateAvg,
+            ])
+            .execute(&client())
+            .await
+            .expect("request failed")
+            .expect("title should exist");
+
+        assert!(manga.summary.is_some(), "summary field was not returned");
+        assert!(
+            manga.genres.as_ref().is_some_and(|g| !g.is_empty()),
+            "genres field was not returned"
+        );
+        assert!(manga.authors.is_some(), "authors field was not returned");
+    }
+
+    #[tokio::test]
+    async fn missing_title_resolves_to_none() {
+        let manga = MangaQuery::new(MISSING_SLUG).execute(&client()).await.expect("request failed");
+
+        assert!(manga.is_none());
+    }
+}

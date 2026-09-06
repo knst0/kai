@@ -104,3 +104,29 @@ impl CommentsStickyQuery {
         Ok(result.data)
     }
 }
+
+#[cfg(all(test, feature = "live-tests"))]
+mod tests {
+    use super::*;
+    use crate::queries::test_util::{COMMENT_POST_TYPE, MANGA_ID, client};
+
+    #[tokio::test]
+    async fn lists_comments_on_a_title() {
+        let comments = CommentsQuery::new(MANGA_ID, COMMENT_POST_TYPE)
+            .execute(&client())
+            .await
+            .expect("request failed");
+
+        for comment in comments.root.iter().chain(&comments.replies) {
+            assert!(comment.id > 0);
+        }
+    }
+
+    #[tokio::test]
+    async fn lists_sticky_comments_on_a_title() {
+        CommentsStickyQuery::new(MANGA_ID, COMMENT_POST_TYPE)
+            .execute(&client())
+            .await
+            .expect("request failed");
+    }
+}

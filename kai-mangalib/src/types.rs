@@ -1,5 +1,6 @@
 use serde::{Deserialize, Deserializer};
 use serde_json::Value;
+use std::collections::HashMap;
 
 // Upstream serializes this as either a JSON boolean or a 0/1 integer depending
 // on the endpoint (observed on `/manga/{slug}` vs `/anime/{slug}`).
@@ -40,13 +41,13 @@ pub struct Cover {
 
 #[derive(Debug, Deserialize)]
 pub struct ImageFile {
-    pub filename: String,
+    pub filename: Option<String>,
     pub url: String,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct Avatar {
-    pub filename: String,
+    pub filename: Option<String>,
     pub url: String,
 }
 
@@ -102,8 +103,10 @@ pub struct Format {
 
 #[derive(Debug, Deserialize)]
 pub struct LoginStreak {
-    pub last_login_at: String,
+    pub last_login_at: Option<String>,
+    #[serde(default)]
     pub login_streak: i64,
+    #[serde(default)]
     pub max_login_streak: i64,
 }
 
@@ -116,7 +119,7 @@ pub struct LoginStreakPreferences {
 
 #[derive(Debug, Deserialize)]
 pub struct PointsInfo {
-    pub top: i64,
+    pub top: Option<i64>,
     pub total_points: i64,
     pub level: i64,
     pub max_level_points: i64,
@@ -200,7 +203,9 @@ pub struct Publisher {
     pub name: String,
     pub rus_name: Option<String>,
     pub cover: Cover,
-    pub subscription: Subscription,
+    pub subscription: Option<Subscription>,
+    #[serde(default)]
+    pub stats: Vec<StatItem>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -210,6 +215,9 @@ pub struct Franchise {
     pub slug_url: String,
     pub model: String,
     pub name: String,
+    pub rus_name: Option<String>,
+    #[serde(default)]
+    pub stats: Vec<StatItem>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -222,9 +230,14 @@ pub struct People {
     pub rus_name: Option<String>,
     pub alt_name: Option<String>,
     pub cover: Cover,
-    pub subscription: Subscription,
+    pub subscription: Option<Subscription>,
+    #[serde(default)]
     pub confirmed: bool,
-    pub user_id: i64,
+    pub user_id: Option<i64>,
+    #[serde(default)]
+    pub stats: Vec<StatItem>,
+    #[serde(default)]
+    pub titles_count_details: HashMap<String, i64>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -336,7 +349,7 @@ pub struct Metadata {
 
 #[derive(Debug, Deserialize)]
 pub struct ItemsCount {
-    pub uploaded: i64,
+    pub uploaded: Option<i64>,
     pub total: i64,
 }
 
@@ -960,16 +973,26 @@ pub struct CommentRelationMedia {
 }
 
 #[derive(Debug, Deserialize)]
-pub struct CommentRelation {
+pub struct CommentChapterRelation {
     pub id: i64,
     pub name: String,
     pub volume: String,
     pub number_secondary: String,
     pub number: String,
-    pub branch_id: i64,
+    pub branch_id: Option<i64>,
     pub manga_id: i64,
     pub media: CommentRelationMedia,
     pub model: String,
+}
+
+/// What a comment is attached to. Comments on a title carry the title itself,
+/// while comments on a chapter carry the chapter plus its parent title.
+#[derive(Debug, Deserialize)]
+#[serde(untagged)]
+pub enum CommentRelation {
+    Chapter(Box<CommentChapterRelation>),
+    Media(Box<CommentRelationMedia>),
+    Other(Value),
 }
 
 #[derive(Debug, Deserialize)]
@@ -978,7 +1001,7 @@ pub struct Comment {
     pub root_id: Option<i64>,
     pub parent_comment: Option<i64>,
     pub comment_level: i64,
-    pub post_page: i64,
+    pub post_page: Option<i64>,
     pub comment: String,
     pub created_at: String,
     pub created_at_ts: i64,
@@ -1179,3 +1202,110 @@ pub struct UserStats {
 pub struct UserStatsResponse {
     pub data: UserStats,
 }
+
+// ============================================================================
+// Search Types
+// ============================================================================
+
+#[derive(Debug, Deserialize)]
+pub struct StatItem {
+    pub value: i64,
+    pub formated: String,
+    pub short: String,
+    pub label: String,
+    pub tag: String,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct SearchMeta {
+    pub current_page: i64,
+    pub from: Option<i64>,
+    pub path: String,
+    pub per_page: i64,
+    pub to: Option<i64>,
+    #[serde(default)]
+    pub last_page: Option<i64>,
+    #[serde(default)]
+    pub total: Option<i64>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct SearchResponse<T> {
+    pub data: Vec<T>,
+    pub links: PageLinks,
+    pub meta: SearchMeta,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct Character {
+    pub id: i64,
+    pub slug: String,
+    pub slug_url: String,
+    pub model: String,
+    pub name: String,
+    pub rus_name: Option<String>,
+    pub cover: Cover,
+    pub subscription: Option<Subscription>,
+    #[serde(default)]
+    pub stats: Vec<StatItem>,
+    #[serde(default)]
+    pub titles_count_details: HashMap<String, i64>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct TeamSearchItem {
+    pub id: i64,
+    pub slug: String,
+    pub slug_url: String,
+    pub model: String,
+    pub name: String,
+    pub cover: Cover,
+    #[serde(default)]
+    pub stats: Vec<StatItem>,
+}
+
+// ============================================================================
+// Landing Page Types
+// ============================================================================
+
+/// The landing payload aggregates many unrelated widgets whose shapes drift
+/// between site sections, so sections are exposed as raw JSON.
+#[derive(Debug, Deserialize)]
+pub struct Landing {
+    #[serde(default)]
+    pub popular: Vec<Manga>,
+    #[serde(default)]
+    pub newest: Vec<Manga>,
+    #[serde(default)]
+    pub latest_updates: Vec<Manga>,
+    #[serde(default)]
+    pub collections: Vec<Value>,
+    #[serde(default)]
+    pub reviews: Vec<Value>,
+    #[serde(default)]
+    pub weekly_top_users: Vec<User>,
+    #[serde(default)]
+    pub weekly_top_views_users: Vec<User>,
+    #[serde(default)]
+    pub news: Vec<Value>,
+    #[serde(default)]
+    pub visited_news: Vec<Value>,
+    #[serde(default)]
+    pub forum: Vec<Value>,
+    #[serde(default)]
+    pub slider: Vec<Value>,
+    #[serde(default)]
+    pub currently_views: Option<Value>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct LandingResponse {
+    pub data: Landing,
+}
+
+// ============================================================================
+// Translations Types
+// ============================================================================
+
+#[derive(Debug, Deserialize)]
+pub struct TranslationsResponse(pub HashMap<String, Value>);

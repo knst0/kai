@@ -32,3 +32,14 @@ impl UserStatsQuery {
         Ok(result.data)
     }
 }
+
+#[cfg(all(test, feature = "live-tests"))]
+mod tests {
+    use super::*;
+    use crate::queries::test_util::{USER_ID, client};
+
+    #[tokio::test]
+    async fn fetches_public_user_statistics() {
+        UserStatsQuery::new(USER_ID).execute(&client()).await.expect("request failed");
+    }
+}

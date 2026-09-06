@@ -37,3 +37,19 @@ impl SimilarQuery {
         Ok(result.data)
     }
 }
+
+#[cfg(all(test, feature = "live-tests"))]
+mod tests {
+    use super::*;
+    use crate::queries::test_util::{MANGA_SLUG, client};
+
+    #[tokio::test]
+    async fn lists_similar_titles() {
+        let similar =
+            SimilarQuery::new(MANGA_SLUG).execute(&client()).await.expect("request failed");
+
+        for item in &similar {
+            assert!(item.id > 0);
+        }
+    }
+}

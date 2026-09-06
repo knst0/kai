@@ -113,3 +113,23 @@ impl Default for NotificationsCountQuery {
         Self::new()
     }
 }
+
+#[cfg(all(test, feature = "live-tests"))]
+mod tests {
+    use super::*;
+    use crate::queries::test_util::client;
+
+    #[tokio::test]
+    async fn lists_notifications() {
+        skip_without_token!();
+
+        NotificationsQuery::new().execute(&client()).await.expect("request failed");
+    }
+
+    #[tokio::test]
+    async fn fetches_the_notification_count() {
+        skip_without_token!();
+
+        NotificationsCountQuery::new().execute(&client()).await.expect("request failed");
+    }
+}

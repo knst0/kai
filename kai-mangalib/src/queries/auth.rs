@@ -40,3 +40,18 @@ impl Default for AuthMeQuery {
         Self::new()
     }
 }
+
+#[cfg(all(test, feature = "live-tests"))]
+mod tests {
+    use super::*;
+    use crate::queries::test_util::client;
+
+    #[tokio::test]
+    async fn fetches_the_authenticated_account() {
+        skip_without_token!();
+
+        let me = AuthMeQuery::new().execute(&client()).await.expect("request failed");
+
+        assert!(me.get("data").is_some(), "response had no data envelope");
+    }
+}

@@ -42,3 +42,23 @@ impl ChaptersQuery {
         Ok(result.data)
     }
 }
+
+#[cfg(all(test, feature = "live-tests"))]
+mod tests {
+    use super::*;
+    use crate::queries::test_util::{BRANCHED_MANGA_SLUG, client};
+
+    #[tokio::test]
+    async fn lists_chapters_in_order() {
+        let chapters = ChaptersQuery::new(BRANCHED_MANGA_SLUG)
+            .execute(&client())
+            .await
+            .expect("request failed");
+
+        assert!(!chapters.is_empty(), "title reported no chapters");
+        for chapter in &chapters {
+            assert!(!chapter.number.is_empty());
+            assert!(chapter.id > 0);
+        }
+    }
+}

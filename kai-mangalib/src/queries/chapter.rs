@@ -76,3 +76,38 @@ impl ChapterQuery {
         Ok(Some(result.data))
     }
 }
+
+#[cfg(all(test, feature = "live-tests"))]
+mod tests {
+    use super::*;
+    use crate::queries::ChaptersQuery;
+    use crate::queries::test_util::{BRANCHED_MANGA_SLUG, MISSING_SLUG, client};
+
+    #[tokio::test]
+    async fn fetches_the_first_chapter_of_a_title() {
+        let chapters = ChaptersQuery::new(BRANCHED_MANGA_SLUG)
+            .execute(&client())
+            .await
+            .expect("chapter list request failed");
+        let first = chapters.first().expect("title reported no chapters");
+
+        let chapter = ChapterQuery::new(BRANCHED_MANGA_SLUG, &first.volume, &first.number)
+            .execute(&client())
+            .await
+            .expect("request failed")
+            .expect("chapter should exist");
+
+        assert_eq!(chapter.number, first.number);
+        assert_eq!(chapter.volume, first.volume);
+    }
+
+    #[tokio::test]
+    async fn missing_chapter_resolves_to_none() {
+        let chapter = ChapterQuery::new(MISSING_SLUG, "1", "1")
+            .execute(&client())
+            .await
+            .expect("request failed");
+
+        assert!(chapter.is_none());
+    }
+}

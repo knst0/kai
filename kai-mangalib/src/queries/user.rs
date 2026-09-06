@@ -73,3 +73,40 @@ impl UserQuery {
         Ok(Some(result.data))
     }
 }
+
+#[cfg(all(test, feature = "live-tests"))]
+mod tests {
+    use super::*;
+    use crate::queries::test_util::{USER_ID, client};
+
+    #[tokio::test]
+    async fn fetches_a_public_profile() {
+        let user = UserQuery::new(USER_ID)
+            .execute(&client())
+            .await
+            .expect("request failed")
+            .expect("user should exist");
+
+        assert_eq!(user.id, USER_ID);
+        assert!(!user.username.is_empty());
+    }
+
+    #[tokio::test]
+    async fn requested_fields_are_populated() {
+        let user = UserQuery::new(USER_ID)
+            .with_fields([UserField::CreatedAt, UserField::Roles])
+            .execute(&client())
+            .await
+            .expect("request failed")
+            .expect("user should exist");
+
+        assert!(user.created_at.is_some(), "created_at field was not returned");
+    }
+
+    #[tokio::test]
+    async fn missing_user_resolves_to_none() {
+        let user = UserQuery::new(i64::MAX).execute(&client()).await.expect("request failed");
+
+        assert!(user.is_none());
+    }
+}

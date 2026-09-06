@@ -97,3 +97,51 @@ impl AnimeQuery {
         Ok(Some(result.data))
     }
 }
+
+#[cfg(all(test, feature = "live-tests"))]
+mod tests {
+    use super::*;
+    use crate::queries::test_util::{ANIME_SLUG, MISSING_SLUG, client};
+
+    #[tokio::test]
+    async fn fetches_a_known_anime() {
+        let anime = AnimeQuery::new(ANIME_SLUG)
+            .site_id(SiteId::Anime)
+            .execute(&client())
+            .await
+            .expect("request failed")
+            .expect("anime should exist");
+
+        assert_eq!(anime.slug_url, ANIME_SLUG);
+        assert_eq!(anime.model, "anime");
+        assert!(!anime.name.is_empty());
+    }
+
+    #[tokio::test]
+    async fn requested_fields_are_populated() {
+        let anime = AnimeQuery::new(ANIME_SLUG)
+            .site_id(SiteId::Anime)
+            .with_fields([AnimeField::Summary, AnimeField::Genres, AnimeField::EpisodesCount])
+            .execute(&client())
+            .await
+            .expect("request failed")
+            .expect("anime should exist");
+
+        assert!(anime.summary.is_some(), "summary field was not returned");
+        assert!(
+            anime.genres.as_ref().is_some_and(|g| !g.is_empty()),
+            "genres field was not returned"
+        );
+    }
+
+    #[tokio::test]
+    async fn missing_anime_resolves_to_none() {
+        let anime = AnimeQuery::new(MISSING_SLUG)
+            .site_id(SiteId::Anime)
+            .execute(&client())
+            .await
+            .expect("request failed");
+
+        assert!(anime.is_none());
+    }
+}

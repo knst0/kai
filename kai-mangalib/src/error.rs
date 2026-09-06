@@ -9,6 +9,17 @@ pub enum Error {
 
     #[error("Request build error: {0}")]
     RequestBuildError(String),
-}
 
-// todo: In error.rs: Consider adding variants for API-specific errors (rate limited, unauthorized, etc.) rather than lumping everything into HttpError.
+    /// The request was rejected before it reached the resource, so the body
+    /// carries a validation report instead of the expected payload.
+    #[error("API rejected the request ({status}): {message}")]
+    ApiError { status: u16, message: String },
+
+    /// The endpoint requires an account and none was configured.
+    #[error("authentication required")]
+    Unauthorized,
+
+    /// Upstream asked us to slow down.
+    #[error("rate limited by the API")]
+    RateLimited,
+}

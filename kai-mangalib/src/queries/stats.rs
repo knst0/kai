@@ -50,3 +50,23 @@ impl StatsQuery {
         Ok(result.data)
     }
 }
+
+#[cfg(all(test, feature = "live-tests"))]
+mod tests {
+    use super::*;
+    use crate::queries::test_util::{MANGA_SLUG, client};
+
+    #[tokio::test]
+    async fn fetches_bookmark_and_rating_stats() {
+        let stats = StatsQuery::new(MANGA_SLUG)
+            .bookmarks(true)
+            .rating(true)
+            .execute(&client())
+            .await
+            .expect("request failed");
+
+        assert!(!stats.bookmarks.stats.is_empty(), "bookmark stats were empty");
+        assert!(!stats.rating.stats.is_empty(), "rating stats were empty");
+        assert!(stats.bookmarks.count >= 0);
+    }
+}

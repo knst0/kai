@@ -61,3 +61,23 @@ impl ConstantsQuery {
         Ok(result.data)
     }
 }
+
+#[cfg(all(test, feature = "live-tests"))]
+mod tests {
+    use super::*;
+    use crate::queries::test_util::client;
+
+    #[tokio::test]
+    async fn fetches_catalog_constants() {
+        let constants = ConstantsQuery::new()
+            .with_fields([ConstantsField::Genres, ConstantsField::Tags])
+            .execute(&client())
+            .await
+            .expect("request failed");
+
+        assert!(
+            constants.genres.as_ref().is_some_and(|g| !g.is_empty()),
+            "genres constant was not returned"
+        );
+    }
+}

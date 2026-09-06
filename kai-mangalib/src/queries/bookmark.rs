@@ -36,3 +36,16 @@ impl MangaBookmarkQuery {
         Ok(result.data)
     }
 }
+
+#[cfg(all(test, feature = "live-tests"))]
+mod tests {
+    use super::*;
+    use crate::queries::test_util::{MANGA_SLUG, client};
+
+    #[tokio::test]
+    async fn fetches_the_bookmark_state_of_a_title() {
+        skip_without_token!();
+
+        MangaBookmarkQuery::new(MANGA_SLUG).execute(&client()).await.expect("request failed");
+    }
+}

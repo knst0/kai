@@ -40,3 +40,16 @@ impl Default for ModerationCountQuery {
         Self::new()
     }
 }
+
+#[cfg(all(test, feature = "live-tests"))]
+mod tests {
+    use super::*;
+    use crate::queries::test_util::client;
+
+    #[tokio::test]
+    async fn fetches_the_moderation_queue_count() {
+        skip_without_token!();
+
+        ModerationCountQuery::new().execute(&client()).await.expect("request failed");
+    }
+}

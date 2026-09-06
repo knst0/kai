@@ -44,3 +44,28 @@ impl BranchesQuery {
         Ok(result.data)
     }
 }
+
+#[cfg(all(test, feature = "live-tests"))]
+mod tests {
+    use super::*;
+    use crate::queries::test_util::{BRANCHED_MANGA_ID, client};
+
+    #[tokio::test]
+    async fn lists_translation_branches() {
+        let branches =
+            BranchesQuery::new(BRANCHED_MANGA_ID).execute(&client()).await.expect("request failed");
+
+        for branch in &branches {
+            assert!(branch.id > 0);
+        }
+    }
+
+    #[tokio::test]
+    async fn accepts_the_team_defaults_flag() {
+        BranchesQuery::new(BRANCHED_MANGA_ID)
+            .team_defaults(true)
+            .execute(&client())
+            .await
+            .expect("request failed");
+    }
+}

@@ -7,7 +7,7 @@ use reqwest::Method;
 #[derive(Debug, Clone)]
 pub struct BookmarksQuery {
     user_id: i64,
-    status: Option<i64>,
+    status: i64,
     sort_by: String,
     sort_type: String,
     page: u32,
@@ -15,10 +15,14 @@ pub struct BookmarksQuery {
 }
 
 impl BookmarksQuery {
-    pub fn new(user_id: i64) -> Self {
+    /// Creates a query for one bookmark shelf.
+    ///
+    /// `status` selects the shelf and is required by the API; a request without
+    /// it is rejected with a validation error rather than an empty list.
+    pub fn new(user_id: i64, status: i64) -> Self {
         Self {
             user_id,
-            status: None,
+            status,
             sort_by: "name".to_owned(),
             sort_type: "desc".to_owned(),
             page: 1,
@@ -32,7 +36,7 @@ impl BookmarksQuery {
     }
 
     pub fn status(mut self, status: i64) -> Self {
-        self.status = Some(status);
+        self.status = status;
         self
     }
 
@@ -52,15 +56,13 @@ impl BookmarksQuery {
     }
 
     pub async fn execute(&self, client: &Client) -> Result<Vec<Bookmark>, Error> {
-        let mut query = vec![
+        let query = vec![
+            ("status", self.status.to_string()),
             ("user_id", self.user_id.to_string()),
             ("sort_by", self.sort_by.clone()),
             ("sort_type", self.sort_type.clone()),
             ("page", self.page.to_string()),
         ];
-        if let Some(status) = self.status {
-            query.push(("status", status.to_string()));
-        }
 
         let request = client
             .init_request(Method::GET, "/bookmarks", self.site_id)
@@ -68,9 +70,64 @@ impl BookmarksQuery {
             .build()
             .map_err(|e| Error::RequestBuildError(e.to_string()))?;
 
-        let response = client.send(request).await?;
+        let response = Client::check_response(client.send(request).await?).await?;
         let result = response.json::<BookmarksResponse>().await.map_err(Error::HttpError)?;
 
         Ok(result.data)
+    }
+}
+
+#[cfg(all(test, feature = "live-tests"))]
+mod tests {
+    use super::*;
+    use crate::queries::test_util::{BOOKMARK_STATUS, USER_ID, client};
+
+    #[tokio::test]
+    async fn lists_a_users_bookmarks() {
+        skip_without_token!();
+
+        let bookmarks = BookmarksQuery::new(USER_ID, BOOKMARK_STATUS)
+            .execute(&client())
+            .await
+            .expect("request failed");
+
+        for bookmark in &bookmarks {
+            assert!(bookmark.id > 0);
+            assert_eq!(bookmark.status, BOOKMARK_STATUS);
+        }
+    }
+
+    /// Reading another account's shelf is allowed but yields nothing, so this
+    /// case works without a token and still exercises the success decode path.
+    #[tokio::test]
+    async fn a_shelf_decodes_even_when_empty() {
+        BookmarksQuery::new(USER_ID, BOOKMARK_STATUS)
+            .sort_by("created_at")
+            .execute(&client())
+            .await
+            .expect("request failed");
+    }
+
+    /// A rejected request must surface as [`Error::ApiError`] carrying the
+    /// server's explanation, not as an opaque serde decode failure from trying
+    /// to read the validation object as a list.
+    #[tokio::test]
+    async fn a_rejected_request_reports_the_api_message() {
+        let error = BookmarksQuery::new(USER_ID, BOOKMARK_STATUS)
+            .sort_by("definitely-not-a-sort-column")
+            .execute(&client())
+            .await
+            .expect_err("the API should reject an unknown sort column");
+
+        match error {
+            Error::ApiError { status, message } => {
+                assert_eq!(status, 422);
+                assert!(
+                    message.contains("sort_by"),
+                    "message should name the offending field, got: {message}"
+                );
+            }
+            other => panic!("expected Error::ApiError, got {other:?}"),
+        }
     }
 }

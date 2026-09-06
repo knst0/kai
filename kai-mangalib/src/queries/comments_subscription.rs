@@ -42,3 +42,19 @@ impl CommentsSubscriptionQuery {
         Ok(result)
     }
 }
+
+#[cfg(all(test, feature = "live-tests"))]
+mod tests {
+    use super::*;
+    use crate::queries::test_util::{COMMENT_POST_TYPE, MANGA_ID, client};
+
+    #[tokio::test]
+    async fn fetches_the_subscription_state() {
+        skip_without_token!();
+
+        CommentsSubscriptionQuery::new(MANGA_ID, MANGA_ID, COMMENT_POST_TYPE)
+            .execute(&client())
+            .await
+            .expect("request failed");
+    }
+}

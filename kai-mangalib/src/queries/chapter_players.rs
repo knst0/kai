@@ -41,3 +41,19 @@ impl ChapterPlayersQuery {
         Ok(result)
     }
 }
+
+#[cfg(all(test, feature = "live-tests"))]
+mod tests {
+    use super::*;
+    use crate::queries::test_util::{BRANCHED_MANGA_SLUG, client};
+
+    #[tokio::test]
+    async fn fetches_the_players_page() {
+        let players = ChapterPlayersQuery::new(BRANCHED_MANGA_SLUG)
+            .execute(&client())
+            .await
+            .expect("request failed");
+
+        assert_eq!(players.meta.current_page, 1);
+    }
+}
